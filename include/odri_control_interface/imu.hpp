@@ -13,21 +13,19 @@
 
 #include <math.h>
 #include <unistd.h>
-#include <stdexcept>
 #include <memory>
+#include <stdexcept>
 
 #include "master_board_sdk/defines.h"
 #include "master_board_sdk/master_board_interface.h"
 
 #include <odri_control_interface/common.hpp>
 
-namespace odri_control_interface
-{
+namespace odri_control_interface {
 /**
  * @brief Class for dealing with the IMU.
  */
-class IMU
-{
+class IMU {
 protected:
     std::shared_ptr<MasterBoardInterface> robot_if_;
     std::array<int, 3> rotate_vector_;
@@ -41,19 +39,14 @@ protected:
     Eigen::Vector4d attitude_quaternion_;
 
 public:
-    IMU(const std::shared_ptr<MasterBoardInterface>& robot_if,
-        RefVectorXl rotate_vector,
-        RefVectorXl orientation_vector);
+    IMU(const std::shared_ptr<MasterBoardInterface>& robot_if, RefVectorXl rotate_vector, RefVectorXl orientation_vector);
 
     IMU(const std::shared_ptr<MasterBoardInterface>& robot_if);
 
     // If needed, add some error handling for the IMU as well.
     // For instance, check for bounds on the maximum linear acceleration
     // or the maximum angular velocity that should be detected as an error.
-    bool HasError()
-    {
-        return false;
-    }
+    bool HasError() { return false; }
 
     void ParseSensorData();
 

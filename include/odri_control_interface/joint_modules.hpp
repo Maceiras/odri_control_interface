@@ -13,21 +13,19 @@
 
 #include <unistd.h>
 #include <iostream>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "master_board_sdk/defines.h"
 #include "master_board_sdk/master_board_interface.h"
 
 #include <odri_control_interface/common.hpp>
 
-namespace odri_control_interface
-{
+namespace odri_control_interface {
 /**
  * @brief Class abstracting the blmc motors to modules.
  */
-class JointModules
-{
+class JointModules {
 protected:
     std::shared_ptr<MasterBoardInterface> robot_if_;
     std::vector<Motor*> motors_;

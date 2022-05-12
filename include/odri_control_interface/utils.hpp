@@ -14,13 +14,9 @@
 #include "odri_control_interface/calibration.hpp"
 #include "odri_control_interface/robot.hpp"
 
-namespace odri_control_interface
-{
-std::shared_ptr<Robot> RobotFromYamlFile(const std::string& if_name,
-                                         const std::string& file_path);
+namespace odri_control_interface {
+std::shared_ptr<Robot> RobotFromYamlFile(const std::string& if_name, const std::string& file_path);
 std::shared_ptr<Robot> RobotFromYamlFile(const std::string& file_path);
-std::shared_ptr<JointCalibrator> JointCalibratorFromYamlFile(
-    const std::string& file_path, std::shared_ptr<JointModules> joints);
-std::shared_ptr<MasterBoardInterface> CreateMasterBoardInterface(
-    const std::string &if_name, bool listener_mode = false);
+std::shared_ptr<JointCalibrator> JointCalibratorFromYamlFile(const std::string& file_path, std::shared_ptr<JointModules> joints);
+std::shared_ptr<MasterBoardInterface> CreateMasterBoardInterface(const std::string& if_name, bool listener_mode = false);
 }  // namespace odri_control_interface

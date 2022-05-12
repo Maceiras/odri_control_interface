@@ -20,13 +20,11 @@
 #include <odri_control_interface/imu.hpp>
 #include <odri_control_interface/joint_modules.hpp>
 
-namespace odri_control_interface
-{
+namespace odri_control_interface {
 /**
  * @brief Class abstracting the blmc motors to modules.
  */
-class Robot
-{
+class Robot {
 public:
     std::shared_ptr<MasterBoardInterface> robot_if;
     std::shared_ptr<JointModules> joints;
@@ -109,8 +107,7 @@ public:
      * calibration procedure finished successfully. Otherwise (e.g. when an
      * error occurred or the communication timed-out) return false.
      */
-    bool RunCalibration(const std::shared_ptr<JointCalibrator>& calibrator,
-                        VectorXd const& target_positions);
+    bool RunCalibration(const std::shared_ptr<JointCalibrator>& calibrator, VectorXd const& target_positions);
 
     /**
      * @brief Runs the calibration procedure for the calibrator passed in

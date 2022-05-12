@@ -9,39 +9,32 @@
  * @brief Robot class orchistrating the devices.
  */
 
-#include <stdexcept>   // for exception, runtime_error, out_of_range
+#include <stdexcept>  // for exception, runtime_error, out_of_range
 
 #include "odri_control_interface/robot.hpp"
 
-namespace odri_control_interface
-{
+namespace odri_control_interface {
 Robot::Robot(const std::shared_ptr<MasterBoardInterface>& robot_if,
              const std::shared_ptr<JointModules>& joint_modules,
              const std::shared_ptr<IMU>& imu,
              const std::shared_ptr<JointCalibrator>& calibrator)
-    : robot_if(robot_if), joints(joint_modules), imu(imu),
-      calibrator(calibrator), saw_error_(false)
-{
+    : robot_if(robot_if), joints(joint_modules), imu(imu), calibrator(calibrator), saw_error_(false) {
     last_time_ = std::chrono::system_clock::now();
 }
 
-const std::shared_ptr<MasterBoardInterface>& Robot::GetRobotInterface()
-{
+const std::shared_ptr<MasterBoardInterface>& Robot::GetRobotInterface() {
     return robot_if;
 }
 
-const std::shared_ptr<JointModules>& Robot::GetJoints()
-{
+const std::shared_ptr<JointModules>& Robot::GetJoints() {
     return joints;
 }
 
-const std::shared_ptr<IMU>& Robot::GetIMU()
-{
+const std::shared_ptr<IMU>& Robot::GetIMU() {
     return imu;
 }
 
-void Robot::Init()
-{
+void Robot::Init() {
     // Init the robot.
     robot_if->Init();
 
@@ -49,8 +42,7 @@ void Robot::Init()
     joints->Enable();
 }
 
-void Robot::SendInit()
-{
+void Robot::SendInit() {
     robot_if->SendInit();
 }
 
@@ -58,26 +50,19 @@ void Robot::SendInit()
  * @brief Initializes the session and blocks until either the package
  *   got acknowledged or the communication timed out.
  */
-void Robot::Start()
-{
+void Robot::Start() {
     Init();
 
     // Initiate the communication session.
-    std::chrono::time_point<std::chrono::system_clock> last =
-        std::chrono::system_clock::now();
-    while (!robot_if->IsTimeout() && !robot_if->IsAckMsgReceived())
-    {
-        if (((std::chrono::duration<double>)(std::chrono::system_clock::now() -
-                                             last))
-                .count() > 0.001)
-        {
+    std::chrono::time_point<std::chrono::system_clock> last = std::chrono::system_clock::now();
+    while (!robot_if->IsTimeout() && !robot_if->IsAckMsgReceived()) {
+        if (((std::chrono::duration<double>)(std::chrono::system_clock::now() - last)).count() > 0.001) {
             last = std::chrono::system_clock::now();
             robot_if->SendInit();
         }
     }
 
-    if (robot_if->IsTimeout())
-    {
+    if (robot_if->IsTimeout()) {
         throw std::runtime_error("Timeout during Robot::Start().");
     }
 
@@ -86,8 +71,7 @@ void Robot::Start()
     ParseSensorData();
 }
 
-bool Robot::IsAckMsgReceived()
-{
+bool Robot::IsAckMsgReceived() {
     return robot_if->IsAckMsgReceived();
 }
 
@@ -96,11 +80,9 @@ bool Robot::IsAckMsgReceived()
  *   to the robot. If an error was detected, go into safety mode
  *   and apply the safety control from the joint_module.
  */
-bool Robot::SendCommand()
-{
+bool Robot::SendCommand() {
     HasError();
-    if (saw_error_)
-    {
+    if (saw_error_) {
         joints->RunSafetyController();
     }
     robot_if->SendCommand();
@@ -110,14 +92,10 @@ bool Robot::SendCommand()
 /**
  * @brief
  */
-bool Robot::SendCommandAndWaitEndOfCycle(double dt)
-{
+bool Robot::SendCommandAndWaitEndOfCycle(double dt) {
     bool result = SendCommand();
 
-    while (((std::chrono::duration<double>)(std::chrono::system_clock::now() -
-                                            last_time_))
-               .count() < dt)
-    {
+    while (((std::chrono::duration<double>)(std::chrono::system_clock::now() - last_time_)).count() < dt) {
         std::this_thread::yield();
     }
     last_time_ = std::chrono::system_clock::now();
@@ -128,40 +106,32 @@ bool Robot::SendCommandAndWaitEndOfCycle(double dt)
 /**
  *
  */
-void Robot::ParseSensorData()
-{
+void Robot::ParseSensorData() {
     robot_if->ParseSensorData();
     joints->ParseSensorData();
 
-    if (imu)
-    {
+    if (imu) {
         imu->ParseSensorData();
     }
 }
 
-bool Robot::RunCalibration(const std::shared_ptr<JointCalibrator>& calibrator,
-                           VectorXd const& target_positions)
-{
+bool Robot::RunCalibration(const std::shared_ptr<JointCalibrator>& calibrator, VectorXd const& target_positions) {
     bool is_done = false;
-    if (target_positions.size() != joints->GetNumberMotors())
-    {
+    if (target_positions.size() != joints->GetNumberMotors()) {
         throw std::runtime_error(
             "Target position vector has a different size than the "
             "number of motors.");
     }
-    while (!IsTimeout())
-    {
+    while (!IsTimeout()) {
         ParseSensorData();
 
         is_done = calibrator->RunAndGoTo(target_positions);
 
-        if (is_done)
-        {
+        if (is_done) {
             return true;
         }
 
-        if (!SendCommandAndWaitEndOfCycle(calibrator->dt()))
-        {
+        if (!SendCommandAndWaitEndOfCycle(calibrator->dt())) {
             throw std::runtime_error("Error during Robot::RunCalibration().");
         }
     }
@@ -170,8 +140,7 @@ bool Robot::RunCalibration(const std::shared_ptr<JointCalibrator>& calibrator,
     return false;
 }
 
-bool Robot::RunCalibration(VectorXd const& target_positions)
-{
+bool Robot::RunCalibration(VectorXd const& target_positions) {
     return RunCalibration(calibrator, target_positions);
 }
 
@@ -179,8 +148,7 @@ bool Robot::RunCalibration(VectorXd const& target_positions)
  * @brief Way to report an external error. Causes the robot to go into
  *   safety mode.
  */
-void Robot::ReportError(const std::string& error)
-{
+void Robot::ReportError(const std::string& error) {
     msg_out_ << "ERROR: " << error << std::endl;
     ReportError();
 }
@@ -189,32 +157,24 @@ void Robot::ReportError(const std::string& error)
  * @brief Way to report an external error. Causes the robot to go into
  *   safety mode.
  */
-void Robot::ReportError()
-{
+void Robot::ReportError() {
     saw_error_ = true;
 }
 
 /**
  * @brief Returns true if all connected devices report ready.
  */
-bool Robot::IsReady()
-{
+bool Robot::IsReady() {
     return joints->IsReady();
 }
 
-bool Robot::WaitUntilReady()
-{
+bool Robot::WaitUntilReady() {
     ParseSensorData();
     joints->SetZeroCommands();
 
-    std::chrono::time_point<std::chrono::system_clock> last =
-        std::chrono::system_clock::now();
-    while (!IsReady() && !HasError())
-    {
-        if (((std::chrono::duration<double>)(std::chrono::system_clock::now() -
-                                             last))
-                .count() > 0.001)
-        {
+    std::chrono::time_point<std::chrono::system_clock> last = std::chrono::system_clock::now();
+    while (!IsReady() && !HasError()) {
+        if (((std::chrono::duration<double>)(std::chrono::system_clock::now() - last)).count() > 0.001) {
             last += std::chrono::milliseconds(1);
             if (!IsAckMsgReceived()) {
                 SendInit();
@@ -222,16 +182,13 @@ bool Robot::WaitUntilReady()
                 ParseSensorData();
                 SendCommand();
             }
-        }
-        else
-        {
+        } else {
             std::this_thread::yield();
         }
     }
 
     if (HasError()) {
-        if (robot_if->IsTimeout())
-        {
+        if (robot_if->IsTimeout()) {
             throw std::runtime_error("Timeout during Robot::WaitUntilReady().");
         } else {
             throw std::runtime_error("Error during Robot::WaitUntilReady().");
@@ -241,15 +198,13 @@ bool Robot::WaitUntilReady()
     return !saw_error_;
 }
 
-void Robot::Initialize(VectorXd const& target_positions)
-{
+void Robot::Initialize(VectorXd const& target_positions) {
     Start();
     WaitUntilReady();
     RunCalibration(target_positions);
 }
 
-bool Robot::IsTimeout()
-{
+bool Robot::IsTimeout() {
     return robot_if->IsTimeout();
 }
 
@@ -257,18 +212,14 @@ bool Robot::IsTimeout()
  * @brief Checks all connected devices for errors. Also checks
  *  if there is a timeout.
  */
-bool Robot::HasError()
-{
+bool Robot::HasError() {
     saw_error_ |= joints->HasError();
-    if (imu)
-    {
+    if (imu) {
         saw_error_ |= imu->HasError();
     }
 
-    if (robot_if->IsTimeout())
-    {
-        if (timeout_counter_++ % 2000 == 0)
-        {
+    if (robot_if->IsTimeout()) {
+        if (timeout_counter_++ % 2000 == 0) {
             msg_out_ << "ERROR: Robot communication timedout." << std::endl;
         }
         saw_error_ = true;

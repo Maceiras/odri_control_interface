@@ -16,13 +16,11 @@
 #include "master_board_sdk/defines.h"
 #include "master_board_sdk/master_board_interface.h"
 
-namespace odri_control_interface
-{
+namespace odri_control_interface {
 /**
  * @brief Abstract device class used in framework.
  */
-class Device
-{
+class Device {
 public:
     virtual bool HasError() = 0;
 };

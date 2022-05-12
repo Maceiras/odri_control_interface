@@ -8,11 +8,9 @@
 #include "odri_control_interface/utils.hpp"
 
 /* make boost::python understand std::shared_ptr */
-namespace boost
-{
+namespace boost {
 template <typename T>
-T *get_pointer(std::shared_ptr<T> p)
-{
+T* get_pointer(std::shared_ptr<T> p) {
     return p.get();
 }
 }  // namespace boost

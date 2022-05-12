@@ -21,21 +21,13 @@
 #include <odri_control_interface/common.hpp>
 #include <odri_control_interface/joint_modules.hpp>
 
-namespace odri_control_interface
-{
-enum CalibrationMethod
-{
-    AUTO,
-    POSITIVE,
-    NEGATIVE,
-    ALTERNATIVE
-};
+namespace odri_control_interface {
+enum CalibrationMethod { AUTO, POSITIVE, NEGATIVE, ALTERNATIVE };
 
 /**
  * @brief
  */
-class JointCalibrator
-{
+class JointCalibrator {
 protected:
     std::shared_ptr<JointModules> joints_;
     std::vector<CalibrationMethod> search_methods_;
@@ -61,14 +53,7 @@ protected:
     bool waiting_time_flag_;
 
 public:
-
-    JointCalibrator(const std::shared_ptr<JointModules>& joints,
-                    const std::vector<CalibrationMethod>& search_methods,
-                    RefVectorXd position_offsets,
-                    double Kp,
-                    double Kd,
-                    double T,
-                    double dt);
+    JointCalibrator(const std::shared_ptr<JointModules>& joints, const std::vector<CalibrationMethod>& search_methods, RefVectorXd position_offsets, double Kp, double Kd, double T, double dt);
 
     void UpdatePositionOffsets(ConstRefVectorXd position_offsets);
 
@@ -76,6 +61,11 @@ public:
      * Return the dt used by the joint calibrator.
      */
     const double& dt();
+
+    /**
+     * Return the calibration offsets
+     */
+    const VectorXd& GetPositionOffsets() { return position_offsets_; }
 
     /**
      * @brief Runs the calibration procedure. Returns true if the calibration is

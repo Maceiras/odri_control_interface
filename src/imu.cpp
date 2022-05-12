@@ -13,88 +13,61 @@
 
 #include <iostream>
 
-namespace odri_control_interface
-{
-IMU::IMU(const std::shared_ptr<MasterBoardInterface>& robot_if,
-         RefVectorXl rotate_vector,
-         RefVectorXl orientation_vector)
-    : robot_if_(robot_if)
-{
-    if (rotate_vector.size() != 3)
-    {
+namespace odri_control_interface {
+IMU::IMU(const std::shared_ptr<MasterBoardInterface>& robot_if, RefVectorXl rotate_vector, RefVectorXl orientation_vector) : robot_if_(robot_if) {
+    if (rotate_vector.size() != 3) {
         throw std::runtime_error("Expecting rotate_vector of size 3");
     }
-    if (orientation_vector.size() != 4)
-    {
+    if (orientation_vector.size() != 4) {
         throw std::runtime_error("Expecting orientation_vector of size 4");
     }
 
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         rotate_vector_[i] = (int)rotate_vector(i);
     }
-    for (int i = 0; i < 4; i++)
-    {
+    for (int i = 0; i < 4; i++) {
         orientation_vector_[i] = (int)orientation_vector(i);
     }
 }
 
-IMU::IMU(const std::shared_ptr<MasterBoardInterface>& robot_if)
-    : robot_if_(robot_if),
-      rotate_vector_({1, 2, 3}),
-      orientation_vector_({1, 2, 3, 4})
-{
-}
+IMU::IMU(const std::shared_ptr<MasterBoardInterface>& robot_if) : robot_if_(robot_if), rotate_vector_({1, 2, 3}), orientation_vector_({1, 2, 3, 4}) {}
 
-const std::shared_ptr<MasterBoardInterface>& IMU::GetMasterBoardInterface()
-{
+const std::shared_ptr<MasterBoardInterface>& IMU::GetMasterBoardInterface() {
     return robot_if_;
 }
 
-const Eigen::Vector3d& IMU::GetGyroscope()
-{
+const Eigen::Vector3d& IMU::GetGyroscope() {
     return gyroscope_;
 }
 
-const Eigen::Vector3d& IMU::GetAccelerometer()
-{
+const Eigen::Vector3d& IMU::GetAccelerometer() {
     return accelerometer_;
 }
 
-const Eigen::Vector3d& IMU::GetLinearAcceleration()
-{
+const Eigen::Vector3d& IMU::GetLinearAcceleration() {
     return linear_acceleration_;
 }
 
-const Eigen::Vector3d& IMU::GetAttitudeEuler()
-{
+const Eigen::Vector3d& IMU::GetAttitudeEuler() {
     return attitude_euler_;
 }
 
-const Eigen::Vector4d& IMU::GetAttitudeQuaternion()
-{
+const Eigen::Vector4d& IMU::GetAttitudeQuaternion() {
     return attitude_quaternion_;
 }
 
-void IMU::ParseSensorData()
-{
+void IMU::ParseSensorData() {
     int index;
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         index = rotate_vector_[i];
-        if (index < 0)
-        {
+        if (index < 0) {
             gyroscope_(i) = -robot_if_->imu_data_gyroscope(-index - 1);
             accelerometer_(i) = -robot_if_->imu_data_accelerometer(-index - 1);
-            linear_acceleration_(i) =
-                -robot_if_->imu_data_linear_acceleration(-index - 1);
-        }
-        else
-        {
+            linear_acceleration_(i) = -robot_if_->imu_data_linear_acceleration(-index - 1);
+        } else {
             gyroscope_(i) = robot_if_->imu_data_gyroscope(index - 1);
             accelerometer_(i) = robot_if_->imu_data_accelerometer(index - 1);
-            linear_acceleration_(i) =
-                robot_if_->imu_data_linear_acceleration(index - 1);
+            linear_acceleration_(i) = robot_if_->imu_data_linear_acceleration(index - 1);
         }
     }
 
@@ -115,15 +88,11 @@ void IMU::ParseSensorData()
     attitude[3] = cr * cp * cy + sr * sp * sy;
 
     // Rotate the attitude.
-    for (int i = 0; i < 4; i++)
-    {
+    for (int i = 0; i < 4; i++) {
         int index = orientation_vector_[i];
-        if (index < 0)
-        {
+        if (index < 0) {
             attitude_quaternion_(i) = -attitude[-index - 1];
-        }
-        else
-        {
+        } else {
             attitude_quaternion_(i) = attitude[index - 1];
         }
     }
@@ -142,8 +111,7 @@ void IMU::ParseSensorData()
 
     double sinp = 2 * (qw * qy - qz * qx);
     if (std::abs(sinp) >= 1)
-        attitude_euler_(1) =
-            std::copysign(M_PI / 2, sinp);  // use 90 degrees if out of range
+        attitude_euler_(1) = std::copysign(M_PI / 2, sinp);  // use 90 degrees if out of range
     else
         attitude_euler_(1) = std::asin(sinp);
 
